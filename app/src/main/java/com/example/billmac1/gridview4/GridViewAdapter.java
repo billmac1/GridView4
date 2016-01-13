@@ -2,13 +2,11 @@ package com.example.billmac1.gridview4;
 
 import android.app.Activity;
 import android.content.Context;
-import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
@@ -49,7 +47,7 @@ public class GridViewAdapter extends ArrayAdapter<GridItem> {
             LayoutInflater inflater = ((Activity) mContext).getLayoutInflater();
             row = inflater.inflate(layoutResourceId, parent, false);
             holder = new ViewHolder();
-            holder.titleTextView = (TextView) row.findViewById(R.id.grid_item_title);
+     //       holder.titleTextView = (TextView) row.findViewById(R.id.grid_item_title);
             holder.imageView = (ImageView) row.findViewById(R.id.grid_item_image);
             row.setTag(holder);
         } else {
@@ -57,15 +55,16 @@ public class GridViewAdapter extends ArrayAdapter<GridItem> {
         }
 
         GridItem item = mGridData.get(position);
-        holder.titleTextView.setText(Html.fromHtml(item.getTitle()));
+    //    holder.titleTextView.setText(Html.fromHtml(item.getTitle()));
 
         Picasso.with(mContext).load(item.getImage()).into(holder.imageView);
         return row;
     }
 
     static class ViewHolder {
-        TextView titleTextView;
+   //     TextView titleTextView;
         ImageView imageView;
+
     }
 
 }
