@@ -13,14 +13,4 @@
         android:adjustViewBounds="true"
         android:scaleType="fitCenter"/>
 
-    <!--  <TextView
-          android:id="@+id/grid_item_title"
-          android:layout_width="fill_parent"
-          android:layout_height="wrap_content"
-          android:layout_marginTop="5dp"
-          android:gravity="center"
-          android:maxLines="2"
-          android:ellipsize="marquee"
-          android:textSize="12sp" />   -->
-
-  </LinearLayout>
+</LinearLayout>
