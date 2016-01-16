@@ -1,3 +1,23 @@
 <resources>
+
+
+
     <string name="app_name">MovieTime</string>
+
+    <string name="sort_options">Sort Options</string>
+    <string name="help">Help</string>
+
+    <string name="pref_sort_label">Sort Options</string>
+    <string name="pref_sort_key">sort</string>
+    <string name="pref_sort_default">Popularity</string>
+
+    <string name="pref_sort_label_popularity">Popularity</string>
+    <string name="pref_sort_label_rating">Rating</string>
+
+    <string name="pref_sort_popularity">popularity</string>
+    <string name="pref_sort_rating">vote_average</string>
+
+
+
+
 </resources>

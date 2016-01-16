@@ -1,11 +1,16 @@
 package com.example.billmac1.gridview4;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
@@ -35,21 +40,7 @@ public class GridViewActivity extends AppCompatActivity {
     private ProgressBar mProgressBar;
     private GridViewAdapter mGridAdapter;
     private ArrayList<GridItem> mGridData;
-
-
-
-   // private String FEED_URL = "http://javatechig.com/?json=get_recent_posts&count=45";
-   final String FORECAST_BASE_URL =
-           "http://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc";
-    final String API_KEY = "api_key";
-
-    Uri builder = Uri.parse(FORECAST_BASE_URL).buildUpon()
-            .appendQueryParameter(API_KEY, BuildConfig.MOVIE_DB_API_KEY)
-            .build();
-
-    private String FEED_URL = builder.toString();
-
-
+    private String sortChoice = "popularity";
 
 
     @Override
@@ -98,17 +89,47 @@ public class GridViewActivity extends AppCompatActivity {
             }
         });
 
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String sortChoice = sharedPrefs.getString(
+                getString(R.string.pref_sort_key),
+                getString(R.string.pref_sort_default));
 
 
-        //Start download
-        new AsyncHttpTask().execute(FEED_URL);
+        final String FORECAST_BASE_URL =
+                "http://api.themoviedb.org/3/discover/movie?sort_by=" + sortChoice + ".desc";
+        final String API_KEY = "api_key";
+
+        Uri builder = Uri.parse(FORECAST_BASE_URL).buildUpon()
+                .appendQueryParameter(API_KEY, BuildConfig.MOVIE_DB_API_KEY)
+                .build();
+
+        final String FEED_URL = builder.toString();
+
+          //Start download
+        new GetMovieData().execute(FEED_URL);
         mProgressBar.setVisibility(View.VISIBLE);
-    //    FetchMovieDataTask movieDataTask = new FetchMovieDataTask();
-    //    movieDataTask.execute("");
+
     }
 
+
+    private void updateMovieGrid(){
+
+        GetMovieData movieDataTask = new GetMovieData();
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        String prefSort = sharedPref.getString(getString(R.string.pref_sort_key),
+                getString(R.string.pref_sort_default));
+        movieDataTask.execute(prefSort);
+    }
+
+    @Override
+    public void onStart(){
+        super.onStart();
+        updateMovieGrid();
+    }
+
+
     //Downloading data asynchronously
-    public class AsyncHttpTask extends AsyncTask<String, Void, Integer> {
+    public class GetMovieData extends AsyncTask<String, Void, Integer> {
 
         @Override
         protected Integer doInBackground(String... params) {
@@ -201,6 +222,55 @@ public class GridViewActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.sort_options, menu);
+        return true;
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        // Handle item selection
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.sort_options) {
+            startActivity(new Intent(this, SettingsActivity.class));
+            newSort();
+            return true;
+        }
+        if (id == R.id.help) {
+          //  openPreferredLocationInMap();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+
+    }
+
+
+    private void newSort(){
+
+       // FetchWeatherTask weatherTask = new FetchWeatherTask();
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        String prefSort = sharedPref.getString(getString(R.string.pref_sort_key),
+                getString(R.string.pref_sort_default));
+      //  weatherTask.execute(prefSort);
+
+
+
+    }
+
+
+
+
 
 
 

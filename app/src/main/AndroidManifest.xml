@@ -21,6 +21,15 @@
 
         <activity android:name=".DetailsActivity" />
 
+        <activity
+            android:name=".SettingsActivity"
+            android:label="@string/sort_options"
+            android:parentActivityName=".GridViewActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.billmac1.gridview4.GridViewActivity" />
+        </activity>
+
     </application>
 
 </manifest>
