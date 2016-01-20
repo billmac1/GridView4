@@ -52,6 +52,7 @@ public class GridViewActivity extends AppCompatActivity {
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         //Initialize with empty data
+
         mGridData = new ArrayList<>();
         mGridAdapter = new GridViewAdapter(this, R.layout.grid_item_layout, mGridData);
         mGridView.setAdapter(mGridAdapter);
@@ -89,12 +90,36 @@ public class GridViewActivity extends AppCompatActivity {
             }
         });
 
+     //   SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+     //   String sortChoice = sharedPrefs.getString(
+     //           getString(R.string.pref_sort_key),
+     //           getString(R.string.pref_sort_default));
+
+
+     //   final String FORECAST_BASE_URL =
+    //            "http://api.themoviedb.org/3/discover/movie?sort_by=" + sortChoice + ".desc";
+    //   final String API_KEY = "api_key";
+
+     //   Uri builder = Uri.parse(FORECAST_BASE_URL).buildUpon()
+     //           .appendQueryParameter(API_KEY, BuildConfig.MOVIE_DB_API_KEY)
+     //           .build();
+
+     //   final String FEED_URL = builder.toString();
+
+          //Start download
+     //   new GetMovieData().execute(FEED_URL);
+     //   mProgressBar.setVisibility(View.VISIBLE);
+        updateMovieGrid();
+
+    }
+
+
+    private void updateMovieGrid(){
+        mGridAdapter.clear();
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         String sortChoice = sharedPrefs.getString(
                 getString(R.string.pref_sort_key),
                 getString(R.string.pref_sort_default));
-
-
         final String FORECAST_BASE_URL =
                 "http://api.themoviedb.org/3/discover/movie?sort_by=" + sortChoice + ".desc";
         final String API_KEY = "api_key";
@@ -105,27 +130,15 @@ public class GridViewActivity extends AppCompatActivity {
 
         final String FEED_URL = builder.toString();
 
-          //Start download
+        //Start download
         new GetMovieData().execute(FEED_URL);
-        mProgressBar.setVisibility(View.VISIBLE);
-
     }
 
-
-    private void updateMovieGrid(){
-
-        GetMovieData movieDataTask = new GetMovieData();
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        String prefSort = sharedPref.getString(getString(R.string.pref_sort_key),
-                getString(R.string.pref_sort_default));
-        movieDataTask.execute(prefSort);
-    }
-
-    @Override
-    public void onStart(){
-        super.onStart();
-        updateMovieGrid();
-    }
+ //   @Override
+ //   public void onStart(){
+ //       super.onStart();
+ //       updateMovieGrid();
+ //   }
 
 
     //Downloading data asynchronously
@@ -243,7 +256,9 @@ public class GridViewActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.sort_options) {
             startActivity(new Intent(this, SettingsActivity.class));
-            newSort();
+        //    newSort();   none of these are needed here???
+        //    updateMovieGrid();
+        //    recreate();
             return true;
         }
         if (id == R.id.help) {
@@ -258,18 +273,34 @@ public class GridViewActivity extends AppCompatActivity {
 
     private void newSort(){
 
-       // FetchWeatherTask weatherTask = new FetchWeatherTask();
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        String prefSort = sharedPref.getString(getString(R.string.pref_sort_key),
-                getString(R.string.pref_sort_default));
-      //  weatherTask.execute(prefSort);
+      //  SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+    //    String sortChoice = sharedPrefs.getString(
+       //         getString(R.string.pref_sort_key),
+       //         getString(R.string.pref_sort_default));
 
+        final String FORECAST_BASE_URL =
+                "http://api.themoviedb.org/3/discover/movie?sort_by=" + sortChoice + ".desc";
+        final String API_KEY = "api_key";
+
+        Uri builder = Uri.parse(FORECAST_BASE_URL).buildUpon()
+                .appendQueryParameter(API_KEY, BuildConfig.MOVIE_DB_API_KEY)
+                .build();
+
+        final String FEED_URL = builder.toString();
+
+        //Start download
+        new GetMovieData().execute(FEED_URL);
 
 
     }
 
 
+    @Override
+    public void onResume() {
+        super.onResume();  // Always call the superclass method first
 
+        updateMovieGrid();
+    }
 
 
 
