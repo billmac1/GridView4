@@ -18,10 +18,6 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,6 +26,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 
 
@@ -40,8 +38,6 @@ public class GridViewActivity extends AppCompatActivity {
     private ProgressBar mProgressBar;
     private GridViewAdapter mGridAdapter;
     private ArrayList<GridItem> mGridData;
-    private String sortChoice = "popularity";
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +48,6 @@ public class GridViewActivity extends AppCompatActivity {
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         //Initialize with empty data
-
         mGridData = new ArrayList<>();
         mGridAdapter = new GridViewAdapter(this, R.layout.grid_item_layout, mGridData);
         mGridView.setAdapter(mGridAdapter);
@@ -65,7 +60,6 @@ public class GridViewActivity extends AppCompatActivity {
 
                 Intent intent = new Intent(GridViewActivity.this, DetailsActivity.class);
                 ImageView imageView = (ImageView) v.findViewById(R.id.grid_item_image);
-
                 // Interesting data to pass across are the thumbnail size/location, the
                 // resourceId of the source bitmap, the picture description, and the
                 // orientation (to avoid returning back to an obsolete configuration if
@@ -90,32 +84,14 @@ public class GridViewActivity extends AppCompatActivity {
             }
         });
 
-     //   SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-     //   String sortChoice = sharedPrefs.getString(
-     //           getString(R.string.pref_sort_key),
-     //           getString(R.string.pref_sort_default));
 
-
-     //   final String FORECAST_BASE_URL =
-    //            "http://api.themoviedb.org/3/discover/movie?sort_by=" + sortChoice + ".desc";
-    //   final String API_KEY = "api_key";
-
-     //   Uri builder = Uri.parse(FORECAST_BASE_URL).buildUpon()
-     //           .appendQueryParameter(API_KEY, BuildConfig.MOVIE_DB_API_KEY)
-     //           .build();
-
-     //   final String FEED_URL = builder.toString();
-
-          //Start download
-     //   new GetMovieData().execute(FEED_URL);
-     //   mProgressBar.setVisibility(View.VISIBLE);
-        updateMovieGrid();
 
     }
 
 
     private void updateMovieGrid(){
         mGridAdapter.clear();
+   //     String pref_lang ="en";
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         String sortChoice = sharedPrefs.getString(
                 getString(R.string.pref_sort_key),
@@ -123,117 +99,160 @@ public class GridViewActivity extends AppCompatActivity {
         final String FORECAST_BASE_URL =
                 "http://api.themoviedb.org/3/discover/movie?sort_by=" + sortChoice + ".desc";
         final String API_KEY = "api_key";
+ //       final String LANGUAGE = "language";   //could be a setting
 
         Uri builder = Uri.parse(FORECAST_BASE_URL).buildUpon()
                 .appendQueryParameter(API_KEY, BuildConfig.MOVIE_DB_API_KEY)
+ //               .appendQueryParameter(LANGUAGE,pref_lang)
                 .build();
 
         final String FEED_URL = builder.toString();
 
-        //Start download
         new GetMovieData().execute(FEED_URL);
     }
 
- //   @Override
- //   public void onStart(){
- //       super.onStart();
- //       updateMovieGrid();
- //   }
-
 
     //Downloading data asynchronously
-    public class GetMovieData extends AsyncTask<String, Void, Integer> {
+    public class GetMovieData extends AsyncTask<String, Void, String[]> {
+        private final String LOG_TAG = GetMovieData.class.getSimpleName();
 
         @Override
-        protected Integer doInBackground(String... params) {
-            Integer result = 0;
-            try {
-                // Create Apache HttpClient
-                HttpClient httpclient = new DefaultHttpClient();
-                HttpResponse httpResponse = httpclient.execute(new HttpGet(params[0]));
-                int statusCode = httpResponse.getStatusLine().getStatusCode();
+        protected String[] doInBackground(String... params) {
+            // These two need to be declared outside the try/catch
+            // so that they can be closed in the finally block.
+            HttpURLConnection urlConnection = null;
+            BufferedReader reader = null;
 
-                // 200 represents HTTP OK
-                if (statusCode == 200) {
-                    String response = streamToString(httpResponse.getEntity().getContent());
-                    parseResult(response);
-                    result = 1; // Successful
-                } else {
-                    result = 0; //"Failed
+            // Will contain the raw JSON response as a string.
+            String movieJsonStr = null;
+
+            try {
+
+                URL url = new URL( params[0].toString());
+                // Create the request to OpenWeatherMap, and open the connection
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+                urlConnection.connect();
+                // Read the input stream into a String
+                InputStream inputStream = urlConnection.getInputStream();
+                StringBuffer buffer = new StringBuffer();
+                if (inputStream == null) {
+                    // Nothing to do.
+                    return null;
                 }
-            } catch (Exception e) {
-                Log.d(TAG, e.getLocalizedMessage());
+                reader = new BufferedReader(new InputStreamReader(inputStream));
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
+                    // But it does make debugging a *lot* easier if you print out the completed
+                    // buffer for debugging.
+                    buffer.append(line + "\n");
+                }
+
+                if (buffer.length() == 0) {
+                    // Stream was empty.  No point in parsing.
+                    return null;
+                }
+                movieJsonStr = buffer.toString();
+            } catch (IOException e) {
+                Log.e(LOG_TAG, "Error ", e);
+                // If the code didn't successfully get the movie data, there's no point in attemping
+                // to parse it.
+                return null;
+            } finally {
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                }
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (final IOException e) {
+                        Log.e(LOG_TAG, "Error closing stream", e);
+                    }
+                }
             }
+
+            try {
+                return getMovieDataFromJson(movieJsonStr);
+            } catch (JSONException e) {
+                Log.e(LOG_TAG, e.getMessage(), e);
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        private String[] getMovieDataFromJson(String movieJsonStr)
+                throws JSONException {
+            GridItem item;
+            String poster;
+          //  String[] result = null;
+
+            // These are the names of the JSON objects that need to be extracted.
+            final String OWM_LIST = "results";
+            final String OWM_TITLE = "original_title";
+            final String OWM_POSTER = "poster_path";
+            final String OWM_RATING = "vote_average";
+            final String OWM_RELEASE = "release_date";
+            final String OWM_OVERVIEW = "overview";
+
+            JSONObject movieJson = new JSONObject(movieJsonStr);
+            JSONArray movieArray = movieJson.getJSONArray(OWM_LIST);
+
+            String[] result = new String[movieArray.length()];
+
+            for(int i = 0; i < movieArray.length(); i++) {
+                    // Get the JSON object
+                JSONObject movieData = movieArray.getJSONObject(i);
+
+                item = new GridItem();
+
+                String title = movieData.optString(OWM_TITLE);
+                item.setTitle(title);
+
+                String overview = movieData.optString(OWM_OVERVIEW);
+                item.setOverview(overview);
+
+                String poster_url =  "http://image.tmdb.org/t/p/w185";
+                poster = movieData.optString(OWM_POSTER );
+                if (poster != "null") {
+                    item.setImage(poster_url + poster);
+                }
+                else{
+                    item.setImage("R.drawable.no_image");
+                }
+
+
+                String rating = movieData.optString(OWM_RATING);
+                item.setRating(rating);
+
+                String release = movieData.optString(OWM_RELEASE);
+                item.setReleaseDate(release);
+
+                mGridData.add(item);
+                result[i] = poster;   //make result not null
+
+            }
+
             return result;
         }
 
+
+
+
+
         @Override
-        protected void onPostExecute(Integer result) {
+        protected void onPostExecute(String[] result) {
             // Download complete. Let us update UI
-            if (result == 1) {
-                mGridAdapter.setGridData(mGridData);
+            if (result != null) {
+              mGridAdapter.setGridData(mGridData);
             } else {
                 Toast.makeText(GridViewActivity.this, "Failed to fetch data!", Toast.LENGTH_SHORT).show();
             }
             mProgressBar.setVisibility(View.GONE);
         }
-    }
 
-    String streamToString(InputStream stream) throws IOException {
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(stream));
-        String line;
-        String result = "";
-        while ((line = bufferedReader.readLine()) != null) {
-            result += line;
-        }
-
-        // Close stream
-        if (null != stream) {
-            stream.close();
-        }
-        return result;
-    }
-
-    /**
-     * Parsing the feed results and get the list
-     * @param result
-     */
-    private void parseResult(String result) {
-        try {
-            JSONObject response = new JSONObject(result);
-            JSONArray posts = response.optJSONArray("results");
-            GridItem item;
-            String poster;
-            for (int i = 0; i < posts.length(); i++) {
-                JSONObject post = posts.optJSONObject(i);
-
-                String title = post.optString("original_title");
-                item = new GridItem();
-                item.setTitle(title);
-
-                String overview = post.optString("overview");
-                item.setOverview(overview);
-
-        //        JSONArray attachments = post.getJSONArray("attachments");
-        //        if (null != attachments && attachments.length() > 0) {
-         //          JSONObject attachment = attachments.getJSONObject(0);
-        //           if (attachment != null)
-                    poster =  "http://image.tmdb.org/t/p/w185";
-                    poster += post.optString("poster_path");
-                item.setImage(poster);
-
-                String rating = post.optString("vote_average");
-                item.setRating(rating);
-
-                String release = post.optString("release_date");
-                item.setReleaseDate(release);
-
-       //        }
-                mGridData.add(item);
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
     }
 
 
@@ -256,9 +275,6 @@ public class GridViewActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.sort_options) {
             startActivity(new Intent(this, SettingsActivity.class));
-        //    newSort();   none of these are needed here???
-        //    updateMovieGrid();
-        //    recreate();
             return true;
         }
         if (id == R.id.help) {
@@ -271,34 +287,10 @@ public class GridViewActivity extends AppCompatActivity {
     }
 
 
-    private void newSort(){
-
-      //  SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-    //    String sortChoice = sharedPrefs.getString(
-       //         getString(R.string.pref_sort_key),
-       //         getString(R.string.pref_sort_default));
-
-        final String FORECAST_BASE_URL =
-                "http://api.themoviedb.org/3/discover/movie?sort_by=" + sortChoice + ".desc";
-        final String API_KEY = "api_key";
-
-        Uri builder = Uri.parse(FORECAST_BASE_URL).buildUpon()
-                .appendQueryParameter(API_KEY, BuildConfig.MOVIE_DB_API_KEY)
-                .build();
-
-        final String FEED_URL = builder.toString();
-
-        //Start download
-        new GetMovieData().execute(FEED_URL);
-
-
-    }
-
-
     @Override
     public void onResume() {
         super.onResume();  // Always call the superclass method first
-
+        mGridAdapter.clear();
         updateMovieGrid();
     }
 
