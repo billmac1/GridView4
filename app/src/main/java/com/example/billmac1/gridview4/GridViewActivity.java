@@ -84,7 +84,7 @@ public class GridViewActivity extends AppCompatActivity {
             }
         });
 
-
+        updateMovieGrid();
 
     }
 
@@ -128,14 +128,14 @@ public class GridViewActivity extends AppCompatActivity {
 
             try {
 
-                URL url = new URL( params[0].toString());
+                URL url = new URL( params[0]);
                 // Create the request to OpenWeatherMap, and open the connection
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
                 urlConnection.connect();
                 // Read the input stream into a String
                 InputStream inputStream = urlConnection.getInputStream();
-                StringBuffer buffer = new StringBuffer();
+                StringBuilder buffer = new StringBuilder();
                 if (inputStream == null) {
                     // Nothing to do.
                     return null;
@@ -147,7 +147,8 @@ public class GridViewActivity extends AppCompatActivity {
                     // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
                     // But it does make debugging a *lot* easier if you print out the completed
                     // buffer for debugging.
-                    buffer.append(line + "\n");
+                    line += "\n";
+                    buffer.append(line);
                 }
 
                 if (buffer.length() == 0) {
@@ -216,11 +217,11 @@ public class GridViewActivity extends AppCompatActivity {
 
                 String poster_url =  "http://image.tmdb.org/t/p/w185";
                 poster = movieData.optString(OWM_POSTER );
-                if (poster != "null") {
+                if (!poster.equals("null")) {
                     item.setImage(poster_url + poster);
                 }
                 else{
-                    item.setImage("R.drawable.no_image");
+                      item.setImage("R.drawable.no_image");
                 }
 
 
@@ -232,15 +233,9 @@ public class GridViewActivity extends AppCompatActivity {
 
                 mGridData.add(item);
                 result[i] = poster;   //make result not null
-
             }
-
             return result;
         }
-
-
-
-
 
         @Override
         protected void onPostExecute(String[] result) {
@@ -259,12 +254,12 @@ public class GridViewActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.sort_options, menu);
+     //   inflater.inflate(R.menu.sort_options, menu);   //Line from SettingsActivity
+        inflater.inflate(R.menu.menu, menu);
         return true;
     }
 
-
-    @Override
+  /*  @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
@@ -284,14 +279,31 @@ public class GridViewActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
 
+    }  */
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        switch(item.getItemId())
+        {
+            case R.id.preferences:
+            {
+                Intent intent = new Intent();
+                intent.setClassName(this, "com.example.billmac1.gridview4.MyPreferenceActivity");
+                startActivity(intent);
+                return true;
+            }
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
 
     @Override
     public void onResume() {
         super.onResume();  // Always call the superclass method first
-        mGridAdapter.clear();
-        updateMovieGrid();
+   //     mGridAdapter.clear();   Should only run these lines if the preference changed
+   //     updateMovieGrid();
     }
 
 
