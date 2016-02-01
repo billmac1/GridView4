@@ -10,7 +10,7 @@ android {
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
-        buildConfigField "String", "MOVIE_DB_API_KEY", '"9f82028d54ffbfcc16f8e9d0abe5c7c6"'
+       
       //   buildConfigField "String", "MOVIE_DB_API_KEY", 'xxxxxxxxxx'
     }
     buildTypes {
