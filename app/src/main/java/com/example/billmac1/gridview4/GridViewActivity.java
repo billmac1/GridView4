@@ -38,6 +38,7 @@ public class GridViewActivity extends AppCompatActivity {
     private ProgressBar mProgressBar;
     private GridViewAdapter mGridAdapter;
     private ArrayList<GridItem> mGridData;
+    String sortChoice1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,11 +94,11 @@ public class GridViewActivity extends AppCompatActivity {
         mGridAdapter.clear();
    //     String pref_lang ="en";
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        String sortChoice = sharedPrefs.getString(
+        sortChoice1 = sharedPrefs.getString(
                 getString(R.string.pref_sort_key),
                 getString(R.string.pref_sort_default));
         final String FORECAST_BASE_URL =
-                "http://api.themoviedb.org/3/discover/movie?sort_by=" + sortChoice + ".desc";
+                "http://api.themoviedb.org/3/discover/movie?sort_by=" + sortChoice1 + ".desc";
         final String API_KEY = "api_key";
  //       final String LANGUAGE = "language";   //could be a setting
 
@@ -254,32 +255,11 @@ public class GridViewActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-     //   inflater.inflate(R.menu.sort_options, menu);   //Line from SettingsActivity
         inflater.inflate(R.menu.menu, menu);
         return true;
     }
 
-  /*  @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        // Handle item selection
-        int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.sort_options) {
-            startActivity(new Intent(this, SettingsActivity.class));
-            return true;
-        }
-        if (id == R.id.help) {
-          //  openPreferredLocationInMap();
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-
-    }  */
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
@@ -302,8 +282,15 @@ public class GridViewActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();  // Always call the superclass method first
-   //     mGridAdapter.clear();   Should only run these lines if the preference changed
-   //     updateMovieGrid();
+        //there must be a better way to catch a preference change!!!
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String sortChoice2 = sharedPrefs.getString(
+                getString(R.string.pref_sort_key),
+                getString(R.string.pref_sort_default));
+        if (!sortChoice1.equals(sortChoice2)) {
+            mGridAdapter.clear();  // Should only run these lines if the preference changed
+            updateMovieGrid();
+        }
     }
 
 
