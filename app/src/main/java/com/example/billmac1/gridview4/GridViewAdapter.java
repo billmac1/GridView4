@@ -13,13 +13,13 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 
 /**
- * Created by billmac1 on 1/8/2016.
+ * Created by billmac1 on 1/8/2016. Display grid with movie choices
  */
 public class GridViewAdapter extends ArrayAdapter<GridItem> {
 
     private Context mContext;
     private int layoutResourceId;
-    private ArrayList<GridItem> mGridData = new ArrayList<GridItem>();
+    private ArrayList<GridItem> mGridData = new ArrayList<>();
 
     public GridViewAdapter(Context mContext, int layoutResourceId, ArrayList<GridItem> mGridData) {
         super(mContext, layoutResourceId, mGridData);
@@ -31,7 +31,7 @@ public class GridViewAdapter extends ArrayAdapter<GridItem> {
 
     /**
      * Updates grid data and refresh grid items.
-     * @param mGridData
+     *
      */
     public void setGridData(ArrayList<GridItem> mGridData) {
         this.mGridData = mGridData;
@@ -47,7 +47,7 @@ public class GridViewAdapter extends ArrayAdapter<GridItem> {
             LayoutInflater inflater = ((Activity) mContext).getLayoutInflater();
             row = inflater.inflate(layoutResourceId, parent, false);
             holder = new ViewHolder();
-     //       holder.titleTextView = (TextView) row.findViewById(R.id.grid_item_title);
+      //      holder.titleTextView = (TextView) row.findViewById(R.id.grid_item_title);
             holder.imageView = (ImageView) row.findViewById(R.id.grid_item_image);
             row.setTag(holder);
         } else {
@@ -62,9 +62,8 @@ public class GridViewAdapter extends ArrayAdapter<GridItem> {
     }
 
     static class ViewHolder {
-   //     TextView titleTextView;
+    //    TextView titleTextView;
         ImageView imageView;
-
     }
 
 }
